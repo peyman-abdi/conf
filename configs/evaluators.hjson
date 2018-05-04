@@ -1,0 +1,10 @@
+{
+    env: {
+        instance_in_conf_default: env(INSTANCE_D, "in conf default"),
+        instance: env(INSTANCE)
+        host: env(HOST),
+        sample: env(SAMPLE),
+        os: os.Name,
+    },
+    testEval: paramsJoin(1,2,3,4,5)
+}
