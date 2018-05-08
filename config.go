@@ -186,9 +186,6 @@ func evalStringValue(content string, def interface{}) interface{} {
 	return content
 }
 
-/*
-	Avalanche Logger
- */
 func Get(key string, def interface{}) interface{} {
 	return get(key, def)
 }
@@ -200,6 +197,9 @@ func GetInt(key string, def int) int {
 }
 func GetFloat(key string, def float64) float64 {
 	return Get(key, def).(float64)
+}
+func GetBoolean(key string, def bool) bool {
+	return Get(key, def).(bool)
 }
 func GetStringArray(key string, def []string) []string {
 	arr := Get(key, def).([]interface{})
@@ -231,5 +231,4 @@ func GetAsString(key string, def string) string {
 		return fmt.Sprintf("%v", val)
 	}
 }
-
 
