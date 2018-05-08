@@ -25,7 +25,11 @@
                 "string element 1",
                 "string element 2",
                 "string element 3",
-            ]
-        }
-    }
+            ],
+            boolean1: false,
+            boolean2: true,
+            boolean3: 0,
+            boolean4: 1,
+        },
+    },
 }

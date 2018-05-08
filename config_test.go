@@ -57,14 +57,26 @@ func TestNestedObjects(t *testing.T) {
 		}
 	}
 
-	testInts := map[string]float64 {
+	testInts := map[string]int {
 		"nested.vars.app.inner.integer": 10,
 		"nested.objects[0].integer": 100,
 		"nested.objects[1].integer": 200,
 	}
 	for key, val := range testInts {
-		if result := GetFloat(key, 0); result != val {
+		if result := GetInt(key, 0); result != val {
 			t.Error( fmt.Sprintf("Looking for \"%f\" in key %s but found %f", val, key, result))
+		}
+	}
+
+	testBools := map[string]bool {
+		"nested.vars.app.boolean1": false,
+		"nested.vars.app.boolean2": true,
+		"nested.vars.app.boolean3": false,
+		"nested.vars.app.boolean4": true,
+	}
+	for key, val := range testBools {
+		if result := GetBoolean(key, false); result != val {
+			t.Error( fmt.Sprintf("Looking for \"%v\" in key %s but found %v", val, key, result))
 		}
 	}
 

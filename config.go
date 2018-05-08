@@ -193,13 +193,23 @@ func GetString(key string, def string) string {
 	return Get(key, def).(string)
 }
 func GetInt(key string, def int) int {
-	return Get(key, def).(int)
+	return int(Get(key, def).(float64))
 }
 func GetFloat(key string, def float64) float64 {
 	return Get(key, def).(float64)
 }
 func GetBoolean(key string, def bool) bool {
-	return Get(key, def).(bool)
+	val, ok := Get(key, def).(bool)
+	if !ok {
+		val, ok := Get(key, def).(float64)
+		if ok {
+			return val == 1
+		} else {
+			return def
+		}
+	} else {
+		return val
+	}
 }
 func GetStringArray(key string, def []string) []string {
 	arr := Get(key, def).([]interface{})
