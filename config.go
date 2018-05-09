@@ -1,4 +1,4 @@
-package config
+package nemo
 
 import (
 	"strings"
@@ -13,20 +13,14 @@ import (
 	"flag"
 )
 
-type EvaluatorFunction interface {
-	Eval(params []string, def interface{}) interface{}
-	GetFunctionName() string
-}
+func New(configDir string, envDir string, evalFunctions []EvaluatorFunction) *Config {
+	config := new(Config)
 
-var configs map[string]interface{}
-var evaluatorsFunctions map[string]EvaluatorFunction
-
-func Initialize(configDir string, envDir string, evalFunctions []EvaluatorFunction) {
 	var configFiles []string
 
 	configFiles = iterateForConfig(configDir, configFiles)
 
-	configs = make(map[string]interface{})
+	config.configs = make(map[string]interface{})
 	for _, file := range configFiles {
 		if !strings.HasSuffix(file, ".hjson") {
 			continue
@@ -60,7 +54,7 @@ func Initialize(configDir string, envDir string, evalFunctions []EvaluatorFuncti
 			}
 		}
 
-		configs[filename] = conf
+		config.configs[filename] = conf
 	}
 
 	if envDir != "" {
@@ -78,14 +72,16 @@ func Initialize(configDir string, envDir string, evalFunctions []EvaluatorFuncti
 	}
 
 	envEval := new(envEvaluator)
-	evaluatorsFunctions = map[string]EvaluatorFunction {
+	config.evaluatorsFunctions = map[string]EvaluatorFunction {
 		envEval.GetFunctionName(): envEval,
 	}
 	if evalFunctions != nil {
 		for _, evalFunc := range evalFunctions {
-			evaluatorsFunctions[evalFunc.GetFunctionName()] = evalFunc
+			config.evaluatorsFunctions[evalFunc.GetFunctionName()] = evalFunc
 		}
 	}
+
+	return config
 }
 
 func iterateForConfig(topPath string, configFiles []string) []string {
@@ -106,15 +102,15 @@ func iterateForConfig(topPath string, configFiles []string) []string {
 	})
 	return configFiles
 }
-func get(key string, def interface{}) interface{} {
+func get(config *Config, key string, def interface{}) interface{} {
 	keys := strings.Split(key, ".")
 	if len(keys) < 1 {
 		return def
 	}
 
-	return iterateForKey(&keys, configs, def)
+	return iterateForKey(config, &keys, config.configs, def)
 }
-func iterateForKey(keys *[]string, conf map[string]interface{}, def interface{}) interface{} {
+func iterateForKey(config *Config, keys *[]string, conf map[string]interface{}, def interface{}) interface{} {
 	if len(*keys) < 1 {
 		return def
 	}
@@ -144,7 +140,7 @@ func iterateForKey(keys *[]string, conf map[string]interface{}, def interface{})
 			} else {
 				if reflect.TypeOf(conf[key]).Kind() == reflect.String {
 					strKey := conf[key].(string)
-					return evalStringValue(strKey, def)
+					return evalStringValue(config, strKey, def)
 				}
 				return conf[key]
 			}
@@ -156,23 +152,22 @@ func iterateForKey(keys *[]string, conf map[string]interface{}, def interface{})
 			if isArray {
 				newKeys := (*keys)[1:]
 				arr := conf[key].([]interface{})
-				return iterateForKey(&newKeys, arr[arrayIndex].(map[string]interface{}), def)
+				return iterateForKey(config, &newKeys, arr[arrayIndex].(map[string]interface{}), def)
 			} else {
 				newKeys := (*keys)[1:]
-				return iterateForKey(&newKeys, conf[key].(map[string]interface{}), def)
+				return iterateForKey(config, &newKeys, conf[key].(map[string]interface{}), def)
 			}
 		} else {
 			return def
 		}
 	}
 }
-
-func evalStringValue(content string, def interface{}) interface{} {
+func evalStringValue(config *Config, content string, def interface{}) interface{} {
 	evalStartIndex := strings.Index(content, "(")
 	evalEndIndex := strings.Index(content, ")")
 	if evalStartIndex > 0 && evalEndIndex > 0 {
 		methodName := strings.Trim(content[:evalStartIndex], "\"\t' ")
-		if evaluatorsFunctions[methodName] != nil {
+		if config.evaluatorsFunctions[methodName] != nil {
 			evalParamsString := content[evalStartIndex+1:evalEndIndex]
 			evalParams := strings.Split(evalParamsString, ",")
 			var evalParamsSanitized []string
@@ -180,28 +175,37 @@ func evalStringValue(content string, def interface{}) interface{} {
 				evalParamsSanitized = append(evalParamsSanitized, strings.Trim(param, "\"\t' "))
 			}
 
-			return evaluatorsFunctions[methodName].Eval(evalParamsSanitized, def)
+			return config.evaluatorsFunctions[methodName].Eval(evalParamsSanitized, def)
 		}
 	}
 	return content
 }
 
-func Get(key string, def interface{}) interface{} {
-	return get(key, def)
+type EvaluatorFunction interface {
+	Eval(params []string, def interface{}) interface{}
+	GetFunctionName() string
 }
-func GetString(key string, def string) string {
-	return Get(key, def).(string)
+
+type Config struct {
+	configs map[string]interface{}
+	evaluatorsFunctions map[string]EvaluatorFunction
 }
-func GetInt(key string, def int) int {
-	return int(Get(key, def).(float64))
+func (c *Config) Get(key string, def interface{}) interface{} {
+	return get(c, key, def)
 }
-func GetFloat(key string, def float64) float64 {
-	return Get(key, def).(float64)
+func (c *Config) GetString(key string, def string) string {
+	return c.Get(key, def).(string)
 }
-func GetBoolean(key string, def bool) bool {
-	val, ok := Get(key, def).(bool)
+func (c *Config) GetInt(key string, def int) int {
+	return int(c.Get(key, def).(float64))
+}
+func (c *Config) GetFloat(key string, def float64) float64 {
+	return c.Get(key, def).(float64)
+}
+func (c *Config) GetBoolean(key string, def bool) bool {
+	val, ok := c.Get(key, def).(bool)
 	if !ok {
-		val, ok := Get(key, def).(float64)
+		val, ok := c.Get(key, def).(float64)
 		if ok {
 			return val == 1
 		} else {
@@ -211,25 +215,25 @@ func GetBoolean(key string, def bool) bool {
 		return val
 	}
 }
-func GetStringArray(key string, def []string) []string {
-	arr := Get(key, def).([]interface{})
+func (c *Config) GetStringArray(key string, def []string) []string {
+	arr := c.Get(key, def).([]interface{})
 	var foundStrings []string
 	for _, item := range arr {
 		foundStrings = append(foundStrings, item.(string))
 	}
 	return foundStrings
 }
-func GetIntArray(key string, def []int) []int {
-	return Get(key, def).([]int)
+func (c *Config) GetIntArray(key string, def []int) []int {
+	return c.Get(key, def).([]int)
 }
-func GetFloatArray(key string, def []float64) []float64 {
-	return Get(key, def).([]float64)
+func (c *Config) GetFloatArray(key string, def []float64) []float64 {
+	return c.Get(key, def).([]float64)
 }
-func GetMap(key string, def map[string]interface{}) map[string]interface{} {
-	return Get(key, def).(map[string]interface{})
+func (c *Config) GetMap(key string, def map[string]interface{}) map[string]interface{} {
+	return c.Get(key, def).(map[string]interface{})
 }
-func GetAsString(key string, def string) string {
-	val := Get(key, def)
+func (c *Config) GetAsString(key string, def string) string {
+	val := c.Get(key, def)
 	switch val.(type) {
 	case string:
 		return val.(string)
