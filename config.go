@@ -20,7 +20,7 @@ func New(configDir string, envDir string, evalFunctions []EvaluatorFunction) *Co
 
 	configFiles = iterateForConfig(configDir, configFiles)
 
-	config.configs = make(map[string]interface{})
+	config.ConfigsMap = make(map[string]interface{})
 	for _, file := range configFiles {
 		if !strings.HasSuffix(file, ".hjson") {
 			continue
@@ -54,7 +54,7 @@ func New(configDir string, envDir string, evalFunctions []EvaluatorFunction) *Co
 			}
 		}
 
-		config.configs[filename] = conf
+		config.ConfigsMap[filename] = conf
 	}
 
 	if envDir != "" {
@@ -72,12 +72,12 @@ func New(configDir string, envDir string, evalFunctions []EvaluatorFunction) *Co
 	}
 
 	envEval := new(envEvaluator)
-	config.evaluatorsFunctions = map[string]EvaluatorFunction {
+	config.EvaluatorFunctionsMap = map[string]EvaluatorFunction {
 		envEval.GetFunctionName(): envEval,
 	}
 	if evalFunctions != nil {
 		for _, evalFunc := range evalFunctions {
-			config.evaluatorsFunctions[evalFunc.GetFunctionName()] = evalFunc
+			config.EvaluatorFunctionsMap[evalFunc.GetFunctionName()] = evalFunc
 		}
 	}
 
@@ -108,7 +108,7 @@ func get(config *Config, key string, def interface{}) interface{} {
 		return def
 	}
 
-	return iterateForKey(config, &keys, config.configs, def)
+	return iterateForKey(config, &keys, config.ConfigsMap, def)
 }
 func iterateForKey(config *Config, keys *[]string, conf map[string]interface{}, def interface{}) interface{} {
 	if len(*keys) < 1 {
@@ -167,7 +167,7 @@ func evalStringValue(config *Config, content string, def interface{}) interface{
 	evalEndIndex := strings.Index(content, ")")
 	if evalStartIndex > 0 && evalEndIndex > 0 {
 		methodName := strings.Trim(content[:evalStartIndex], "\"\t' ")
-		if config.evaluatorsFunctions[methodName] != nil {
+		if config.EvaluatorFunctionsMap[methodName] != nil {
 			evalParamsString := content[evalStartIndex+1:evalEndIndex]
 			evalParams := strings.Split(evalParamsString, ",")
 			var evalParamsSanitized []string
@@ -175,7 +175,7 @@ func evalStringValue(config *Config, content string, def interface{}) interface{
 				evalParamsSanitized = append(evalParamsSanitized, strings.Trim(param, "\"\t' "))
 			}
 
-			return config.evaluatorsFunctions[methodName].Eval(evalParamsSanitized, def)
+			return config.EvaluatorFunctionsMap[methodName].Eval(evalParamsSanitized, def)
 		}
 	}
 	return content
@@ -187,8 +187,8 @@ type EvaluatorFunction interface {
 }
 
 type Config struct {
-	configs map[string]interface{}
-	evaluatorsFunctions map[string]EvaluatorFunction
+	ConfigsMap            map[string]interface{}
+	EvaluatorFunctionsMap map[string]EvaluatorFunction
 }
 func (c *Config) Get(key string, def interface{}) interface{} {
 	return get(c, key, def)

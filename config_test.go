@@ -27,7 +27,7 @@ func TestInit(t *testing.T) {
 
 	rootDir := filepath.Dir(root + "/../../")
 
-	New(rootDir + "/configs", rootDir, []EvaluatorFunction {
+	New(rootDir + "/ConfigsMap", rootDir, []EvaluatorFunction {
 		new(testEvalFunction),
 	})
 }
@@ -40,7 +40,7 @@ func TestNestedObjects(t *testing.T) {
 
 	rootDir := filepath.Dir(root + "/../../")
 
-	config := New(rootDir + "/configs", rootDir, []EvaluatorFunction {
+	config := New(rootDir + "/ConfigsMap", rootDir, []EvaluatorFunction {
 		new(testEvalFunction),
 	})
 
@@ -101,7 +101,7 @@ func TestEvaluators(t *testing.T) {
 
 	rootDir := filepath.Dir(root + "/../../")
 
-	config := New(rootDir + "/configs", rootDir, []EvaluatorFunction {
+	config := New(rootDir + "/ConfigsMap", rootDir, []EvaluatorFunction {
 		new(testEvalFunction),
 	})
 
