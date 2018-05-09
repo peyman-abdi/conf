@@ -181,11 +181,6 @@ func evalStringValue(config *Config, content string, def interface{}) interface{
 	return content
 }
 
-type EvaluatorFunction interface {
-	Eval(params []string, def interface{}) interface{}
-	GetFunctionName() string
-}
-
 type Config struct {
 	ConfigsMap            map[string]interface{}
 	EvaluatorFunctionsMap map[string]EvaluatorFunction
