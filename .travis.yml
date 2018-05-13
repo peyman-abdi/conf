@@ -6,7 +6,7 @@ go:
 sudo: false
 
 install:
-  make deps
+  make go_get
 
 script:
   make test
