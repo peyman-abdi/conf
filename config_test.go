@@ -13,10 +13,10 @@ type testEvalFunction struct {
 }
 var _ conf.EvaluatorFunction = (*testEvalFunction)(nil)
 
-func (_ *testEvalFunction) GetFunctionName() string {
+func (t *testEvalFunction) GetFunctionName() string {
 	return "paramsJoin"
 }
-func (_ *testEvalFunction) Eval(params []string, def interface{}) interface{} {
+func (t *testEvalFunction) Eval(params []string, def interface{}) interface{} {
 	return strings.Join(params, ":")
 }
 
