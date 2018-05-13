@@ -26,6 +26,7 @@
 
 ### Basic usage
 
+```go
     import "peyman-abdi/conf"
     ...
 
@@ -37,11 +38,13 @@
 	config.GetString("filename.object.innerobject.value", "default")
 	config.GetString("dir.another_dir.filename.object.array[3].value", "default")
 	...
+```
 
 ### Access Environment Variables in config files
 
 use `env()` function in json/hjson files to access environment variables
 
+```go
     // app.hjson
     {
 	    server: {
@@ -69,12 +72,13 @@ use `env()` function in json/hjson files to access environment variables
 	config.GetString("app.database.table", "my_table") 	// returns "my_table"
 	config.GetString("app.database.password", "") 		// returns "secret"
 	config.GetString("app.database.username", "user") 	// returns "root"
-
+```
 
 ### Custom Evaluators
 
 Use custom evaluators to build your own functions to be used inside json/hjson files.
 
+```go
     // my_evals.go
     type MyJoinEvaluatorFunction struct {
 	}
@@ -102,6 +106,7 @@ Use custom evaluators to build your own functions to be used inside json/hjson f
 	})
 
 	config.GetString("my.joined", "") // returns "1::2::3::4::5"
+```
 
 you can use this functionallity and add more power to your config files, like:
 - relative pathes
