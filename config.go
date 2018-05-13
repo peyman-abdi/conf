@@ -157,20 +157,20 @@ func iterateForKey(config *Config, keys *[]string, conf map[string]interface{}, 
 		}
 
 		return def
-	} else {
-		if conf[key] != nil {
-			if isArray {
-				newKeys := (*keys)[1:]
-				arr := conf[key].([]interface{})
-				return iterateForKey(config, &newKeys, arr[arrayIndex].(map[string]interface{}), def)
-			}
+	}
 
+	if conf[key] != nil {
+		if isArray {
 			newKeys := (*keys)[1:]
-			return iterateForKey(config, &newKeys, conf[key].(map[string]interface{}), def)
+			arr := conf[key].([]interface{})
+			return iterateForKey(config, &newKeys, arr[arrayIndex].(map[string]interface{}), def)
 		}
 
-		return def
+		newKeys := (*keys)[1:]
+		return iterateForKey(config, &newKeys, conf[key].(map[string]interface{}), def)
 	}
+
+	return def
 }
 func evalStringValue(config *Config, content string, def interface{}) interface{} {
 	evalStartIndex := strings.Index(content, "(")
