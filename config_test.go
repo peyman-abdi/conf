@@ -29,7 +29,7 @@ func TestInit(t *testing.T) {
 	rootDir := filepath.Join(filepath.Dir(root), "..")
 	t.Log("Searching Config files at: " + rootDir)
 
-	_, err = conf.New(filepath.Join(rootDir, "configs") , rootDir, []conf.EvaluatorFunction {
+	_, err = conf.New(filepath.Join(rootDir, "test_configs") , rootDir, []conf.EvaluatorFunction {
 		new(testEvalFunction),
 	})
 
@@ -47,7 +47,7 @@ func TestNestedObjects(t *testing.T) {
 	rootDir := filepath.Join(filepath.Dir(root), "..")
 	t.Log("Searching Config files at: " + rootDir)
 
-	configure, err := conf.New(filepath.Join(rootDir, "configs") , rootDir, []conf.EvaluatorFunction {
+	configure, err := conf.New(filepath.Join(rootDir, "test_configs") , rootDir, []conf.EvaluatorFunction {
 		new(testEvalFunction),
 	})
 
@@ -124,7 +124,7 @@ func TestEvaluators(t *testing.T) {
 	rootDir := filepath.Join(filepath.Dir(root), "..")
 	t.Log("Searching Config files at: " + rootDir)
 
-	configure, err := conf.New(filepath.Join(rootDir, "configs") , rootDir, []conf.EvaluatorFunction {
+	configure, err := conf.New(filepath.Join(rootDir, "test_configs") , rootDir, []conf.EvaluatorFunction {
 		new(testEvalFunction),
 	})
 
