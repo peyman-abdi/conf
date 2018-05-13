@@ -189,6 +189,28 @@ func evalStringValue(config *Config, content string, def interface{}) interface{
 	return content
 }
 
+
+// EvaluatorFunction lets you create dynamic config values
+// they act like functions inside your hjson/json files
+// each function when called inside config files can have any number of
+// arguments and they are passed to the Eval function.
+type EvaluatorFunction interface {
+	// Evaluate the input arguments and return the value
+	// if an error happened just return the def value
+	Eval(params []string, def interface{}) interface{}
+
+	// Get the name of the function
+	// Returned value of this function is the string
+	// that is used inside config files to call this evaluator
+	GetFunctionName() string
+}
+
+// Config object for accessing configurations as a map
+// all files are parsed at Creation time and recursively added
+// to the ConfigsMap.
+// Its much better and easier to use Getter functions of the struct.
+// But when accessing full config objects are needed they are available with GetMap function or
+// throw the ConfigsMap object
 type Config struct {
 	ConfigsMap            map[string]interface{}
 	EvaluatorFunctionsMap map[string]EvaluatorFunction

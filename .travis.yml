@@ -1,12 +1,7 @@
+sudo: false
 language: go
 go:
-  - "1.5.x"
-  - "1.8.x"
-  - "1.9.x"
-  - "1.10.2"
-  - tip
-
-sudo: false
+  - "1.10.x"
 
 install:
   make go_get
