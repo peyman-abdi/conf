@@ -17,13 +17,15 @@ import (
 	"flag"
 )
 
-// Create a new config parser with a path
-// envDir can be an empty string which will cause the function to ignore .env parsing
-// .hjson and .json files will be opened at this point and all files will be parsed
+// New creates a new config parser with config files at path configDir.
+// Argument envDir can be an empty string which will cause the function to ignore .env parsing
+// Config files with extensions .hjson and .json will be opened at this point and all files will be parsed
 // resulting in a fast access time
-// if there are any Evaluation needed those will be applied when accessing variables
+// If there are any Evaluation needed those will be applied when accessing variables
 // All folders inside configDir will recursively scanned for .hjson and .json files and
 // any config will be accessible by its relative path connected with dots
+// An error may happen during reading files like access denied
+// if the error causes
 func New(configDir string, envDir string, evalFunctions []EvaluatorFunction) (config *Config, err error) {
 	config = new(Config)
 	err = nil
@@ -216,12 +218,12 @@ type Config struct {
 	EvaluatorFunctionsMap map[string]EvaluatorFunction
 }
 
-// Returns true if there is value for key, false otherwise
+// IsSet returns true if there is value for key, false otherwise
 func (c *Config) IsSet(key string) bool {
 	return get(c, key, nil) != nil
 }
 
-// Returns the raw interface{} value of a key
+// Get returns the raw interface{} value of a key
 // You have to convert it to your desired type
 // If you have used a custom EvaluatorFunction to generate the value
 // simply cast the interface{} to your desired type
@@ -239,7 +241,7 @@ func (c *Config) GetString(key string, def string) string {
 	return def
 }
 
-// Checks if the value of the key can be converted to int or not
+// GetInt checks if the value of the key can be converted to int or not
 // if not or if the key does not exist returns the def value
 func (c *Config) GetInt(key string, def int) int {
 	floatVal, ok := c.Get(key, def).(float64)
@@ -250,7 +252,7 @@ func (c *Config) GetInt(key string, def int) int {
 }
 
 
-// Checks if the value of the key can be converted to int64 or not
+// GetInt64 checks if the value of the key can be converted to int64 or not
 // if not or if the key does not exist returns the def value
 func (c *Config) GetInt64(key string, def int64) int64 {
 	floatVal, ok := c.Get(key, def).(float64)
@@ -260,7 +262,7 @@ func (c *Config) GetInt64(key string, def int64) int64 {
 	return def
 }
 
-// Checks if the value of the key can be converted to float64 or not
+// GetFloat checks if the value of the key can be converted to float64 or not
 // if not or if the key does not exist returns the def value
 func (c *Config) GetFloat(key string, def float64) float64 {
 	floatVal, ok := c.Get(key, def).(float64)
@@ -270,7 +272,7 @@ func (c *Config) GetFloat(key string, def float64) float64 {
 	return def
 }
 
-// Checks if the value of the key can be converted to boolean or not
+// GetBoolean checks if the value of the key can be converted to boolean or not
 // if not or if the key does not exist returns the def value
 // valid values are true,false,1,0
 func (c *Config) GetBoolean(key string, def bool) bool {
@@ -287,7 +289,7 @@ func (c *Config) GetBoolean(key string, def bool) bool {
 	}
 }
 
-// Checks if the value of the key can be converted to []string or not
+// GetStringArray checks if the value of the key can be converted to []string or not
 // if not or if the key does not exist returns the def value
 func (c *Config) GetStringArray(key string, def []string) []string {
 	arr, ok := c.Get(key, def).([]string)
@@ -303,7 +305,7 @@ func (c *Config) GetStringArray(key string, def []string) []string {
 	}
 }
 
-// Checks if the value of the key can be converted to []int or not
+// GetIntArray checks if the value of the key can be converted to []int or not
 // if not or if the key does not exist returns the def value
 func (c *Config) GetIntArray(key string, def []int) []int {
 	arr, ok := c.Get(key, def).([]int)
@@ -319,7 +321,7 @@ func (c *Config) GetIntArray(key string, def []int) []int {
 	}
 }
 
-// Checks if the value of the key can be converted to []float64 or not
+// GetFloatArray checks if the value of the key can be converted to []float64 or not
 // if not or if the key does not exist returns the def value
 func (c *Config) GetFloatArray(key string, def []float64) []float64 {
 	arr, ok := c.Get(key, def).([]float64)
@@ -336,7 +338,7 @@ func (c *Config) GetFloatArray(key string, def []float64) []float64 {
 }
 
 
-// Returns the raw config object as map of strings
+// GetMap returns the raw config object as map of strings
 func (c *Config) GetMap(key string, def map[string]interface{}) map[string]interface{} {
 	mapVal, ok := c.Get(key, def).(map[string]interface{})
 	if ok {
@@ -346,7 +348,7 @@ func (c *Config) GetMap(key string, def map[string]interface{}) map[string]inter
 }
 
 
-// Converts the value of the key to string and returns it,
+// GetAsString converts the value of the key to string and returns it,
 // if the key does not exist returns the def value
 func (c *Config) GetAsString(key string, def string) string {
 	val := c.Get(key, def)
