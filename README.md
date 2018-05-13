@@ -1,5 +1,7 @@
 # Conf
 [![Build Status](https://travis-ci.org/peyman-abdi/config.svg?branch=master)](https://travis-ci.org/peyman-abdi/config)
+[![Coverage Status](https://coveralls.io/repos/github/peyman-abdi/conf/badge.svg?branch=master)](https://coveralls.io/github/peyman-abdi/conf?branch=master)
+[![Go Report Card](https://goreportcard.com/badge/github.com/peyman-abdi/conf)](https://goreportcard.com/report/github.com/peyman-abdi/conf)
 
 **Conf** provides easy and powerfull methods to access configurations stored in **hjson**, **json**, **env** files. You pass root configurations directory to the package and it will parse all config files recursively. Provide your own **Evaluators** and make a dynamic config files by calling your applications functions.
 
