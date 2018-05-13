@@ -1,20 +1,21 @@
 package conf
 
 import (
-	"strings"
-	"os"
 	"fmt"
+	"os"
+	"strings"
 )
 
 type envEvaluator struct {
 }
+
 var _ EvaluatorFunction = (*envEvaluator)(nil)
 
 func (e *envEvaluator) GetFunctionName() string {
 	return "env"
 }
 
-func (e *envEvaluator) Eval(params []string, def interface{}) interface{}  {
+func (e *envEvaluator) Eval(params []string, def interface{}) interface{} {
 	if len(params) == 2 {
 		envVal := os.Getenv(params[0])
 		if envVal != "" {

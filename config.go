@@ -5,16 +5,16 @@
 package conf
 
 import (
-	"strings"
-	"os"
-	"fmt"
-	"path/filepath"
-	"strconv"
-	"github.com/joho/godotenv"
-	"reflect"
-	"io/ioutil"
-	"github.com/hjson/hjson-go"
 	"flag"
+	"fmt"
+	"github.com/hjson/hjson-go"
+	"github.com/joho/godotenv"
+	"io/ioutil"
+	"os"
+	"path/filepath"
+	"reflect"
+	"strconv"
+	"strings"
 )
 
 // New creates a new config parser with config files at path configDir.
@@ -82,7 +82,7 @@ func New(configDir string, envDir string, evalFunctions []EvaluatorFunction) (co
 	}
 
 	envEval := new(envEvaluator)
-	config.EvaluatorFunctionsMap = map[string]EvaluatorFunction {
+	config.EvaluatorFunctionsMap = map[string]EvaluatorFunction{
 		envEval.GetFunctionName(): envEval,
 	}
 	if evalFunctions != nil {
@@ -135,7 +135,7 @@ func iterateForKey(config *Config, keys *[]string, conf map[string]interface{}, 
 		keyName := key[:indexStart]
 
 		isArray = true
-		arrayIndex, err = strconv.Atoi(key[indexStart+1:indexEnd])
+		arrayIndex, err = strconv.Atoi(key[indexStart+1 : indexEnd])
 		if err != nil {
 			panic(err)
 		}
@@ -147,29 +147,29 @@ func iterateForKey(config *Config, keys *[]string, conf map[string]interface{}, 
 		if conf[key] != nil {
 			if isArray {
 				return conf[key].([]interface{})[arrayIndex]
-			} else {
-				if reflect.TypeOf(conf[key]).Kind() == reflect.String {
-					strKey := conf[key].(string)
-					return evalStringValue(config, strKey, def)
-				}
-				return conf[key]
 			}
-		} else {
-			return def
+
+			if reflect.TypeOf(conf[key]).Kind() == reflect.String {
+				strKey := conf[key].(string)
+				return evalStringValue(config, strKey, def)
+			}
+			return conf[key]
 		}
+
+		return def
 	} else {
 		if conf[key] != nil {
 			if isArray {
 				newKeys := (*keys)[1:]
 				arr := conf[key].([]interface{})
 				return iterateForKey(config, &newKeys, arr[arrayIndex].(map[string]interface{}), def)
-			} else {
-				newKeys := (*keys)[1:]
-				return iterateForKey(config, &newKeys, conf[key].(map[string]interface{}), def)
 			}
-		} else {
-			return def
+
+			newKeys := (*keys)[1:]
+			return iterateForKey(config, &newKeys, conf[key].(map[string]interface{}), def)
 		}
+
+		return def
 	}
 }
 func evalStringValue(config *Config, content string, def interface{}) interface{} {
@@ -178,10 +178,10 @@ func evalStringValue(config *Config, content string, def interface{}) interface{
 	if evalStartIndex > 0 && evalEndIndex > 0 {
 		methodName := strings.Trim(content[:evalStartIndex], "\"\t' ")
 		if config.EvaluatorFunctionsMap[methodName] != nil {
-			evalParamsString := content[evalStartIndex+1:evalEndIndex]
+			evalParamsString := content[evalStartIndex+1 : evalEndIndex]
 			evalParams := strings.Split(evalParamsString, ",")
 			var evalParamsSanitized []string
-			for _,param := range evalParams {
+			for _, param := range evalParams {
 				evalParamsSanitized = append(evalParamsSanitized, strings.Trim(param, "\"\t' "))
 			}
 
@@ -190,7 +190,6 @@ func evalStringValue(config *Config, content string, def interface{}) interface{
 	}
 	return content
 }
-
 
 // EvaluatorFunction lets you create dynamic config values
 // they act like functions inside your hjson/json files
@@ -251,7 +250,6 @@ func (c *Config) GetInt(key string, def int) int {
 	return def
 }
 
-
 // GetInt64 checks if the value of the key can be converted to int64 or not
 // if not or if the key does not exist returns the def value
 func (c *Config) GetInt64(key string, def int64) int64 {
@@ -281,12 +279,12 @@ func (c *Config) GetBoolean(key string, def bool) bool {
 		val, ok := c.Get(key, def).(float64)
 		if ok {
 			return val == 1
-		} else {
-			return def
 		}
-	} else {
-		return val
+
+		return def
 	}
+
+	return val
 }
 
 // GetStringArray checks if the value of the key can be converted to []string or not
@@ -295,14 +293,14 @@ func (c *Config) GetStringArray(key string, def []string) []string {
 	arr, ok := c.Get(key, def).([]string)
 	if ok {
 		return arr
-	} else {
-		arr := c.Get(key, def).([]interface{})
-		var foundStrings = make([]string, len(arr))
-		for index, item := range arr {
-			foundStrings[index] = item.(string)
-		}
-		return foundStrings
 	}
+
+	arrS := c.Get(key, def).([]interface{})
+	var foundStrings = make([]string, len(arrS))
+	for index, item := range arrS {
+		foundStrings[index] = item.(string)
+	}
+	return foundStrings
 }
 
 // GetIntArray checks if the value of the key can be converted to []int or not
@@ -311,14 +309,14 @@ func (c *Config) GetIntArray(key string, def []int) []int {
 	arr, ok := c.Get(key, def).([]int)
 	if ok {
 		return arr
-	} else {
-		arr := c.Get(key, def).([]interface{})
-		var foundArray = make([]int, len(arr))
-		for index, item := range arr {
-			foundArray[index] = int(item.(float64))
-		}
-		return foundArray
 	}
+
+	arrI := c.Get(key, def).([]interface{})
+	var foundArray = make([]int, len(arrI))
+	for index, item := range arrI {
+		foundArray[index] = int(item.(float64))
+	}
+	return foundArray
 }
 
 // GetFloatArray checks if the value of the key can be converted to []float64 or not
@@ -327,16 +325,15 @@ func (c *Config) GetFloatArray(key string, def []float64) []float64 {
 	arr, ok := c.Get(key, def).([]float64)
 	if ok {
 		return arr
-	} else {
-		arr := c.Get(key, def).([]interface{})
-		var foundArray = make([]float64, len(arr))
-		for index, item := range arr {
-			foundArray[index] = item.(float64)
-		}
-		return foundArray
 	}
-}
 
+	arrF := c.Get(key, def).([]interface{})
+	var foundArray = make([]float64, len(arrF))
+	for index, item := range arrF {
+		foundArray[index] = item.(float64)
+	}
+	return foundArray
+}
 
 // GetMap returns the raw config object as map of strings
 func (c *Config) GetMap(key string, def map[string]interface{}) map[string]interface{} {
@@ -346,7 +343,6 @@ func (c *Config) GetMap(key string, def map[string]interface{}) map[string]inter
 	}
 	return def
 }
-
 
 // GetAsString converts the value of the key to string and returns it,
 // if the key does not exist returns the def value
@@ -363,4 +359,3 @@ func (c *Config) GetAsString(key string, def string) string {
 		return fmt.Sprintf("%v", val)
 	}
 }
-
