@@ -231,7 +231,7 @@ func (c *Config) Get(key string, def interface{}) interface{} {
 	return get(c, key, def)
 }
 
-// Checks if the value of the key can be converted to string or not
+// GetString checks if the value of the key can be converted to string or not
 // if not or if the key does not exist returns the def value
 func (c *Config) GetString(key string, def string) string {
 	strVal, ok := c.Get(key, def).(string)
