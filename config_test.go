@@ -1,4 +1,4 @@
-package nemo
+package conf_test
 
 import (
 	"testing"
@@ -6,11 +6,12 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"peyman/config"
 )
 
 type testEvalFunction struct {
 }
-var _ EvaluatorFunction = (*testEvalFunction)(nil)
+var _ conf.EvaluatorFunction = (*testEvalFunction)(nil)
 
 func (_ *testEvalFunction) GetFunctionName() string {
 	return "paramsJoin"
@@ -25,11 +26,16 @@ func TestInit(t *testing.T) {
 		panic(err)
 	}
 
-	rootDir := filepath.Dir(root + "/../../")
+	rootDir := filepath.Join(filepath.Dir(root), "..")
+	t.Log("Searching Config files at: " + rootDir)
 
-	New(rootDir + "/ConfigsMap", rootDir, []EvaluatorFunction {
+	_, err = conf.New(filepath.Join(rootDir, "configs") , rootDir, []conf.EvaluatorFunction {
 		new(testEvalFunction),
 	})
+
+	if err != nil {
+		t.Error(err)
+	}
 }
 
 func TestNestedObjects(t *testing.T) {
@@ -38,11 +44,16 @@ func TestNestedObjects(t *testing.T) {
 		panic(err)
 	}
 
-	rootDir := filepath.Dir(root + "/../../")
+	rootDir := filepath.Join(filepath.Dir(root), "..")
+	t.Log("Searching Config files at: " + rootDir)
 
-	config := New(rootDir + "/ConfigsMap", rootDir, []EvaluatorFunction {
+	configure, err := conf.New(filepath.Join(rootDir, "configs") , rootDir, []conf.EvaluatorFunction {
 		new(testEvalFunction),
 	})
+
+	if err != nil {
+		t.Error(err)
+	}
 
 	testStrings := map[string]string {
 		"nested.objects[0].name": "First",
@@ -53,7 +64,7 @@ func TestNestedObjects(t *testing.T) {
 		"nested.vars.app.array[1]": "string element 1",
 	}
 	for key, val := range testStrings {
-		checkString(config, key, val, t)
+		checkString(configure, key, val, t)
 	}
 
 	testFloats := map[string]float64 {
@@ -62,7 +73,7 @@ func TestNestedObjects(t *testing.T) {
 		"nested.objects[1].float": 203.33,
 	}
 	for key, val := range testFloats {
-		if result := config.GetFloat(key, 0); result != val {
+		if result := configure.GetFloat(key, 0); result != val {
 			t.Error( fmt.Sprintf("Looking for \"%f\" in key %s but found %f", val, key, result))
 		}
 	}
@@ -73,8 +84,8 @@ func TestNestedObjects(t *testing.T) {
 		"nested.objects[1].integer": 200,
 	}
 	for key, val := range testInts {
-		if result := config.GetInt(key, 0); result != val {
-			t.Error( fmt.Sprintf("Looking for \"%f\" in key %s but found %f", val, key, result))
+		if result := configure.GetInt(key, 0); result != val {
+			t.Error( fmt.Sprintf("Looking for \"%d\" in key %s but found %d", val, key, result))
 		}
 	}
 
@@ -85,35 +96,51 @@ func TestNestedObjects(t *testing.T) {
 		"nested.vars.app.boolean4": true,
 	}
 	for key, val := range testBools {
-		if result := config.GetBoolean(key, false); result != val {
+		if result := configure.GetBoolean(key, false); result != val {
 			t.Error( fmt.Sprintf("Looking for \"%v\" in key %s but found %v", val, key, result))
 		}
 	}
 
-	checkString(config,"dir.inner.inside.value", "Nested conf in directories", t)
+	arrInt := configure.GetIntArray("nested.vars.intArray", []int{})
+	if len(arrInt) != 7 || arrInt[0] != 1 || arrInt[1] != 2 {
+		t.Error( fmt.Sprintf("Looking for int array in key %s but found %v", "nested.vars.intArray", arrInt))
+	}
+
+	arrFloat := configure.GetFloatArray("nested.vars.floatArray", []float64{})
+	if len(arrFloat) != 5 || arrFloat[0] != 1.1 || arrFloat[1] != 1.2 {
+		t.Error( fmt.Sprintf("Looking for float array in key %s but found %v", "nested.vars.intArray", arrFloat))
+	}
+
+
+	checkString(configure,"dir.inner.inside.value", "Nested conf in directories", t)
 }
 
 func TestEvaluators(t *testing.T) {
 	root, err := os.Executable()
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 
-	rootDir := filepath.Dir(root + "/../../")
+	rootDir := filepath.Join(filepath.Dir(root), "..")
+	t.Log("Searching Config files at: " + rootDir)
 
-	config := New(rootDir + "/ConfigsMap", rootDir, []EvaluatorFunction {
+	configure, err := conf.New(filepath.Join(rootDir, "configs") , rootDir, []conf.EvaluatorFunction {
 		new(testEvalFunction),
 	})
 
-	checkString(config, "evaluators.env.instance_in_conf_default", "in conf default", t)
-	checkString(config, "evaluators.env.instance", "TEST", t)
-	checkString(config, "evaluators.env.sample", "2000", t)
-	checkString(config, "evaluators.env.host", "testhost", t)
-	checkString(config, "evaluators.testEval", "1:2:3:4:5", t)
+	if err != nil {
+		t.Error(err)
+	}
+
+	checkString(configure, "evaluators.env.instance_in_conf_default", "in conf default", t)
+	checkString(configure, "evaluators.env.instance", "TEST", t)
+	checkString(configure, "evaluators.env.sample", "2000", t)
+	checkString(configure, "evaluators.env.host", "testhost", t)
+	checkString(configure, "evaluators.testEval", "1:2:3:4:5", t)
 }
 
-func checkString(config *Config, key string, expected string, t *testing.T) {
-	if value := config.GetString(key, "not found"); value != expected {
+func checkString(configure *conf.Config, key string, expected string, t *testing.T) {
+	if value := configure.GetString(key, "not found"); value != expected {
 		t.Error(fmt.Sprintf("Looking for \"%s\" but found \"%s\" in key: \"%s\"", expected, value, key))
 	}
 }

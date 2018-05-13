@@ -1,4 +1,4 @@
-package nemo
+package conf
 
 import (
 	"strings"
@@ -13,8 +13,9 @@ import (
 	"flag"
 )
 
-func New(configDir string, envDir string, evalFunctions []EvaluatorFunction) *Config {
-	config := new(Config)
+func New(configDir string, envDir string, evalFunctions []EvaluatorFunction) (config *Config, err error) {
+	config = new(Config)
+	err = nil
 
 	var configFiles []string
 
@@ -26,17 +27,18 @@ func New(configDir string, envDir string, evalFunctions []EvaluatorFunction) *Co
 			continue
 		}
 
-		content, err := ioutil.ReadFile(file)
-		if err != nil {
-			fmt.Println("Failed reading file at path: " + file)
-			panic(err)
+		content, errF := ioutil.ReadFile(file)
+		if errF != nil {
+			config = nil
+			err = errF
+			return
 		}
 
 		var conf map[string]interface{}
 		err = hjson.Unmarshal(content, &conf)
 		if err != nil {
-			fmt.Println("Failed deserializing lib file at path: " + file)
-			panic(err)
+			config = nil
+			return
 		}
 
 		dirname, filename := filepath.Split(file)
@@ -58,15 +60,10 @@ func New(configDir string, envDir string, evalFunctions []EvaluatorFunction) *Co
 	}
 
 	if envDir != "" {
-		err := godotenv.Load(filepath.Join(envDir, ".env"))
-		if err != nil {
-			panic(err)
-		}
-
-		if flag.Lookup("test.v") != nil {
-			err = godotenv.Overload(filepath.Join(envDir, ".env.test"))
-			if err != nil {
-				panic(err)
+		err = godotenv.Load(filepath.Join(envDir, ".env"))
+		if err == nil {
+			if flag.Lookup("test.v") != nil {
+				err = godotenv.Overload(filepath.Join(envDir, ".env.test"))
 			}
 		}
 	}
@@ -81,7 +78,7 @@ func New(configDir string, envDir string, evalFunctions []EvaluatorFunction) *Co
 		}
 	}
 
-	return config
+	return
 }
 
 func iterateForConfig(topPath string, configFiles []string) []string {
@@ -185,17 +182,39 @@ type Config struct {
 	ConfigsMap            map[string]interface{}
 	EvaluatorFunctionsMap map[string]EvaluatorFunction
 }
+func (c *Config) IsSet(key string) bool {
+	return get(c, key, nil) != nil
+}
 func (c *Config) Get(key string, def interface{}) interface{} {
 	return get(c, key, def)
 }
 func (c *Config) GetString(key string, def string) string {
-	return c.Get(key, def).(string)
+	strVal, ok := c.Get(key, def).(string)
+	if ok {
+		return strVal
+	}
+	return def
 }
 func (c *Config) GetInt(key string, def int) int {
-	return int(c.Get(key, def).(float64))
+	floatVal, ok := c.Get(key, def).(float64)
+	if ok {
+		return int(floatVal)
+	}
+	return def
+}
+func (c *Config) GetInt64(key string, def int64) int64 {
+	floatVal, ok := c.Get(key, def).(float64)
+	if ok {
+		return int64(floatVal)
+	}
+	return def
 }
 func (c *Config) GetFloat(key string, def float64) float64 {
-	return c.Get(key, def).(float64)
+	floatVal, ok := c.Get(key, def).(float64)
+	if ok {
+		return floatVal
+	}
+	return def
 }
 func (c *Config) GetBoolean(key string, def bool) bool {
 	val, ok := c.Get(key, def).(bool)
@@ -212,20 +231,35 @@ func (c *Config) GetBoolean(key string, def bool) bool {
 }
 func (c *Config) GetStringArray(key string, def []string) []string {
 	arr := c.Get(key, def).([]interface{})
-	var foundStrings []string
-	for _, item := range arr {
-		foundStrings = append(foundStrings, item.(string))
+	var foundStrings = make([]string, len(arr))
+	for index, item := range arr {
+		foundStrings[index] = item.(string)
 	}
 	return foundStrings
 }
 func (c *Config) GetIntArray(key string, def []int) []int {
-	return c.Get(key, def).([]int)
+	arr := c.Get(key, def).([]interface{})
+	var foundArray = make([]int, len(arr))
+	for index, item := range arr {
+		foundArray[index] = int(item.(float64))
+	}
+	return foundArray
 }
 func (c *Config) GetFloatArray(key string, def []float64) []float64 {
-	return c.Get(key, def).([]float64)
+	arr := c.Get(key, def).([]interface{})
+	var foundArray = make([]float64, len(arr))
+	for index, item := range arr {
+		foundArray[index] = item.(float64)
+	}
+	return foundArray
+
 }
 func (c *Config) GetMap(key string, def map[string]interface{}) map[string]interface{} {
-	return c.Get(key, def).(map[string]interface{})
+	mapVal, ok := c.Get(key, def).(map[string]interface{})
+	if ok {
+		return mapVal
+	}
+	return def
 }
 func (c *Config) GetAsString(key string, def string) string {
 	val := c.Get(key, def)

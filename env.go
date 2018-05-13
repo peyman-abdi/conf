@@ -1,4 +1,4 @@
-package nemo
+package conf
 
 import (
 	"strings"
