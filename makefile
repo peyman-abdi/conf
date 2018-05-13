@@ -42,7 +42,7 @@ all: go_get test
 go_get:
 	@($(foreach dep, $(DEPENDENCIES), $(GOGET) $(dep);))
 test:
-	$(GOTEST) -o $(BINARY_PATH)/$(basename $(notdir $(ENTRY)))  config_test.go
+	$(GOTEST) -c -o $(BINARY_PATH)/config config_test.go && ./$(BINARY_PATH)/config
 clean:
 	$(GOCLEAN)
 	rm -f $(BINARY_PATH)/*

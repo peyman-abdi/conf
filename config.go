@@ -230,28 +230,43 @@ func (c *Config) GetBoolean(key string, def bool) bool {
 	}
 }
 func (c *Config) GetStringArray(key string, def []string) []string {
-	arr := c.Get(key, def).([]interface{})
-	var foundStrings = make([]string, len(arr))
-	for index, item := range arr {
-		foundStrings[index] = item.(string)
+	arr, ok := c.Get(key, def).([]string)
+	if ok {
+		return arr
+	} else {
+		arr := c.Get(key, def).([]interface{})
+		var foundStrings = make([]string, len(arr))
+		for index, item := range arr {
+			foundStrings[index] = item.(string)
+		}
+		return foundStrings
 	}
-	return foundStrings
 }
 func (c *Config) GetIntArray(key string, def []int) []int {
-	arr := c.Get(key, def).([]interface{})
-	var foundArray = make([]int, len(arr))
-	for index, item := range arr {
-		foundArray[index] = int(item.(float64))
+	arr, ok := c.Get(key, def).([]int)
+	if ok {
+		return arr
+	} else {
+		arr := c.Get(key, def).([]interface{})
+		var foundArray = make([]int, len(arr))
+		for index, item := range arr {
+			foundArray[index] = int(item.(float64))
+		}
+		return foundArray
 	}
-	return foundArray
 }
 func (c *Config) GetFloatArray(key string, def []float64) []float64 {
-	arr := c.Get(key, def).([]interface{})
-	var foundArray = make([]float64, len(arr))
-	for index, item := range arr {
-		foundArray[index] = item.(float64)
+	arr, ok := c.Get(key, def).([]float64)
+	if ok {
+		return arr
+	} else {
+		arr := c.Get(key, def).([]interface{})
+		var foundArray = make([]float64, len(arr))
+		for index, item := range arr {
+			foundArray[index] = item.(float64)
+		}
+		return foundArray
 	}
-	return foundArray
 
 }
 func (c *Config) GetMap(key string, def map[string]interface{}) map[string]interface{} {
