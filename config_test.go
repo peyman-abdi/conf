@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"peyman/config"
+	"../config"
 )
 
 type testEvalFunction struct {
