@@ -22,11 +22,11 @@ func (e *envEvaluator) Eval(params []string, def interface{}) interface{}  {
 			return strings.Trim(envVal, " \"'")
 		}
 		return strings.Trim(params[1], " \"'")
-	} else {
-		envVal := os.Getenv(params[0])
-		if envVal != "" {
-			return envVal
-		}
-		return def
 	}
+
+	envVal := os.Getenv(params[0])
+	if envVal != "" {
+		return envVal
+	}
+	return def
 }
