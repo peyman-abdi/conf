@@ -1,4 +1,5 @@
 # Conf
+[![Build Status](https://travis-ci.org/peyman-abdi/config.svg?branch=master)](https://travis-ci.org/peyman-abdi/config)
 
 **Conf** provides easy and powerfull methods to access configurations stored in **hjson**, **json**, **env** files. You pass root configurations directory to the package and it will parse all config files recursively. Provide your own **Evaluators** and make a dynamic config files by calling your applications functions.
 
@@ -12,6 +13,9 @@
  - USE **.env.test** file to override environment variables in test mode
  - Use `env("environment variable name", "default value")` in configuration files to access environment varaiables in config files
  - Provide your own **Evaluators** to access custom app variables while parsing configurations
+
+## Documentation
+[![GoDoc](https://godoc.org/github.com/peyman-abdi/conf?status.svg)](https://godoc.org/github.com/peyman-abdi/conf)
 
 ## Dependencies
 
