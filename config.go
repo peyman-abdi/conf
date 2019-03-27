@@ -15,6 +15,7 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"math"
 )
 
 // New creates a new config parser with config files at path configDir.
@@ -55,7 +56,8 @@ func New(configDir string, envDir string, evalFunctions []EvaluatorFunction) (co
 		}
 
 		dirname, filename := filepath.Split(file)
-		filename = filename[:strings.Index(filename, ".hjson")]
+		extension := filepath.Ext(file)
+		filename = filename[:len(filename)-len(extension)]
 		if strings.Trim(dirname, "/\\") != strings.Trim(configDir, "/\\") {
 			dirname = dirname[len(configDir):]
 			dirname = strings.Replace(strings.Trim(dirname, "/\\"), "/", ".", -1) + "." + filename
@@ -137,7 +139,7 @@ func iterateForKey(config *Config, keys *[]string, conf map[string]interface{}, 
 		isArray = true
 		arrayIndex, err = strconv.Atoi(key[indexStart+1 : indexEnd])
 		if err != nil {
-			panic(err)
+			return def
 		}
 
 		key = keyName
@@ -254,8 +256,18 @@ func (c *Config) GetInt(key string, def int) int {
 // if not or if the key does not exist returns the def value
 func (c *Config) GetInt64(key string, def int64) int64 {
 	floatVal, ok := c.Get(key, def).(float64)
-	if ok {
+	if ok && floatVal > math.MinInt64 && floatVal < math.MaxInt64 {
 		return int64(floatVal)
+	}
+	return def
+}
+
+// GetInt64 checks if the value of the key can be converted to int64 or not
+// if not or if the key does not exist returns the def value
+func (c *Config) GetUInt64(key string, def uint64) uint64 {
+	floatVal, ok := c.Get(key, def).(float64)
+	if ok {
+		return uint64(floatVal)
 	}
 	return def
 }
@@ -298,7 +310,7 @@ func (c *Config) GetStringArray(key string, def []string) []string {
 	arrS := c.Get(key, def).([]interface{})
 	var foundStrings = make([]string, len(arrS))
 	for index, item := range arrS {
-		foundStrings[index] = item.(string)
+		foundStrings[index] = evalStringValue(c, item.(string), item.(string)).(string)
 	}
 	return foundStrings
 }

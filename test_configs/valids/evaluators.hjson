@@ -1,10 +1,13 @@
 {
     env: {
         instance_in_conf_default: env(INSTANCE_D, "in conf default"),
+        server: env(SERVER, "Github"),
+        port: env(PORT, 8080),
         instance: env(INSTANCE)
         host: env(HOST),
         sample: env(SAMPLE),
-        os: os.Name,
+        val: env("VALUE", "vendor"),
+        noParam: env()
     },
     testEval: paramsJoin(1,2,3,4,5)
 }

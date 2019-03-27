@@ -10,6 +10,8 @@ BINARY_PATH=build
 DEPENDENCIES=\
  github.com/joho/godotenv \
  github.com/hjson/hjson-go \
+ golang.org/x/tools/cmd/cover \
+ github.com/mattn/goveralls
 
 ##### BUILD COMMANDS
 GOCMD=go
@@ -27,22 +29,13 @@ define getPlatform
 $(if ($(OS),Windows_NT),$(if ($(shell uname -s),Linux),OSX,LINUX),WIN32)
 endef
 
-#### BUILD FLAGS
-PLATFORM=$(call getPlatform)
-VARIANT=$(call getVariant)
-BUILD_TIME=$(shell date +%FT%T%Z)
-BUILD_CODE=$(shell git rev-parse HEAD)
-PACKAGE=avalanche/app/core/app
-
-LDFLAGS=-ldflags "-X $(PACKAGE).Version=$(VERSION) -X $(PACKAGE).Code=$(BUILD_CODE) -X $(PACKAGE).Variant=$(VARIANT) -X $(PACKAGE).Platform=$(PLATFORM) -X $(PACKAGE).BuildTime=$(BUILD_TIME)"
-
 #### SCRIPTS
 all: go_get test
 
 go_get:
 	@($(foreach dep, $(DEPENDENCIES), $(GOGET) $(dep);))
 test:
-	$(GOTEST) -c -o $(BINARY_PATH)/config config_test.go && ./$(BINARY_PATH)/config
+	$(GOTEST) -c -o $(BINARY_PATH)/config_test -v -covermode=count ./ && $(BINARY_PATH)/config_test -test.coverprofile coverage.out
 clean:
 	$(GOCLEAN)
 	rm -f $(BINARY_PATH)/*

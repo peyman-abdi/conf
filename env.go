@@ -1,7 +1,6 @@
 package conf
 
 import (
-	"fmt"
 	"os"
 	"strings"
 )
@@ -16,18 +15,17 @@ func (e *envEvaluator) GetFunctionName() string {
 }
 
 func (e *envEvaluator) Eval(params []string, def interface{}) interface{} {
-	if len(params) == 2 {
+	if len(params) > 0 {
 		envVal := os.Getenv(params[0])
 		if envVal != "" {
-			fmt.Println(envVal)
-			return strings.Trim(envVal, " \"'")
+			return envVal
 		}
-		return strings.Trim(params[1], " \"'")
+
+		if len(params) == 2 {
+			return strings.Trim(params[1], " \"'")
+		}
+
 	}
 
-	envVal := os.Getenv(params[0])
-	if envVal != "" {
-		return envVal
-	}
 	return def
 }
